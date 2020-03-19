@@ -227,6 +227,15 @@ viewFrHome =
         , div [ class "buttons is-centered has-addons are-large mt-1" ]
             [ a [ class "button", href "/fr/1" ] [ text "Commence" ]
             ]
+        , footer [ class "footer" ]
+            [ div [ class "content has-text-centered" ]
+                [ span [ class "has-text-grey" ] [ text "Le code de cette application est " ]
+                , a [ href "https://github.com/rametta/quebec-covid19" ] [ text "open source" ]
+                , span [ class "has-text-grey" ] [ text " et disponible à toutes fins." ]
+                , span [ class "has-text-grey" ] [ text " Pour soumettre un correctif de traduction - " ]
+                , a [ href "https://github.com/rametta/quebec-covid19/issues/new" ] [ text "soumettre un problème." ]
+                ]
+            ]
         ]
 
 
@@ -1164,7 +1173,13 @@ viewFrResults answers =
 
 view : Model -> Browser.Document Msg
 view model =
-    { title = "Quebec | Self Assessment"
+    { title =
+        case model.lang of
+            En ->
+                "Quebec | COVID-19 Self Assessment"
+
+            Fr ->
+                "Quebec | COVID-19 auto-évaluation"
     , body =
         [ viewNav model.page model.lang
         , main_ []

@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "parcel index.html",
     "build": "rm -rf dist && parcel build index.html",
-    "deploy": "yarn build && cd .. && netlify deploy --prod"
+    "deploy": "yarn build && netlify deploy --prod"
   },
   "devDependencies": {
     "elm": "^0.19.1-3",

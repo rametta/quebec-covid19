@@ -12,7 +12,6 @@ import Url.Parser exposing ((</>), Parser, oneOf, parse)
 type Lang
     = En
     | Fr
-    | None
 
 
 type Answer
@@ -22,7 +21,8 @@ type Answer
 
 
 type Page
-    = Home
+    = EnHome
+    | FrHome
     | EnQuestion Int
     | FrQuestion Int
     | EnResults
@@ -109,7 +109,8 @@ routeParser =
             Url.Parser.map
     in
     oneOf
-        [ map Home (s "")
+        [ map EnHome (s "en")
+        , map FrHome (s "fr")
         , map EnQuestion (s "en" </> Url.Parser.int)
         , map FrQuestion (s "fr" </> Url.Parser.int)
         , map EnResults (s "en" </> s "results")
@@ -119,14 +120,17 @@ routeParser =
 
 urlToPage : Url -> Page
 urlToPage =
-    parse routeParser >> Maybe.withDefault Home
+    parse routeParser >> Maybe.withDefault EnHome
 
 
 pageLang : Page -> Lang
 pageLang page =
     case page of
-        Home ->
-            None
+        EnHome ->
+            En
+
+        FrHome ->
+            Fr
 
         EnQuestion _ ->
             En
@@ -161,13 +165,19 @@ viewNav page lang =
                     [ a [ class "button is-small", classList [ ( "is-link is-selected", lang == En ) ], href <| "/en/" ++ String.fromInt i, attribute "aria-label" "English" ] [ text "EN" ]
                     , a [ class "button is-small", classList [ ( "is-link is-selected", lang == Fr ) ], href <| "/fr/" ++ String.fromInt i, attribute "aria-label" "Francais" ] [ text "FR" ]
                     ]
+
+            home =
+                div [ class "buttons has-addons mr-1" ]
+                    [ a [ class "button is-small", classList [ ( "is-link is-selected", lang == En ) ], href "/en", attribute "aria-label" "English" ] [ text "EN" ]
+                    , a [ class "button is-small", classList [ ( "is-link is-selected", lang == Fr ) ], href "/fr", attribute "aria-label" "Francais" ] [ text "FR" ]
+                    ]
           in
           case page of
-            Home ->
-                div [ class "buttons has-addons mr-1" ]
-                    [ a [ class "button is-small", classList [ ( "is-link is-selected", lang == En ) ], href "/en/1", attribute "aria-label" "English" ] [ text "EN" ]
-                    , a [ class "button is-small", classList [ ( "is-link is-selected", lang == Fr ) ], href "/fr/1", attribute "aria-label" "Francais" ] [ text "FR" ]
-                    ]
+            EnHome ->
+                home
+
+            FrHome ->
+                home
 
             EnQuestion i ->
                 question i
@@ -183,12 +193,39 @@ viewNav page lang =
         ]
 
 
-viewHome : Html Msg
-viewHome =
+viewEnHome : Html Msg
+viewEnHome =
     div [ class "section" ]
-        [ div [ class "buttons has-addons are-large" ]
-            [ a [ class "button", href "/en/1" ] [ text "English" ]
-            , a [ class "button", href "/fr/1" ] [ text "Français" ]
+        [ div [ class "container" ]
+            [ div [ class "columns is-centered" ]
+                [ div [ class "column is-8" ] [ text "This self-assessment tool, unafilliated with Quebec or the ministry of health, will help determine whether you may need further assessment or testing for COVID-19. You can complete this assessment for yourself, or on behalf of someone else, if they are unable to." ]
+                ]
+            ]
+        , div [ class "buttons is-centered has-addons are-large mt-1" ]
+            [ a [ class "button", href "/en/1" ] [ text "Start" ]
+            ]
+        , footer [ class "footer" ]
+            [ div [ class "content has-text-centered" ]
+                [ span [ class "has-text-grey" ] [ text "The code for this application is " ]
+                , a [ href "https://github.com/rametta/quebec-covid19" ] [ text "open source" ]
+                , span [ class "has-text-grey" ] [ text " and available for all purposes." ]
+                , span [ class "has-text-grey" ] [ text " To submit a translation fix - " ]
+                , a [ href "https://github.com/rametta/quebec-covid19/issues/new" ] [ text "submit an issue." ]
+                ]
+            ]
+        ]
+
+
+viewFrHome : Html Msg
+viewFrHome =
+    div [ class "section" ]
+        [ div [ class "container" ]
+            [ div [ class "columns is-centered" ]
+                [ div [ class "column is-8" ] [ text "Cet outil d'auto-évaluation, non rempli par le Québec ou le ministère de la Santé, vous aidera à déterminer si vous pourriez avoir besoin d'une évaluation ou de tests supplémentaires pour COVID-19. Vous pouvez effectuer cette évaluation pour vous-même ou pour le compte de quelqu'un d'autre, s'il n'est pas en mesure de le faire." ]
+                ]
+            ]
+        , div [ class "buttons is-centered has-addons are-large mt-1" ]
+            [ a [ class "button", href "/fr/1" ] [ text "Commence" ]
             ]
         ]
 
@@ -520,7 +557,7 @@ viewEnResults answers =
                     , div [ class "mt-1" ] [ strong [] [ text "Please do not go to an emergency department, family doctor or walk-in clinic unless your symptoms worsen." ] ]
                     , text "Because you have (or had) symptoms, you should "
                     , a [ target "__blank", href "https://www.publichealthontario.ca/-/media/documents/ncov/factsheet-covid-19-how-to-self-isolate.pdf?la=en" ] [ text "self-isolate" ]
-                    , text " or 14 days. That means not going to any public places, staying at home, and not having any visitors. Don’t share personal items like dishes, utensils, or towels, and wash your hands often."
+                    , text " for 14 days. That means not going to any public places, staying at home, and not having any visitors. Don’t share personal items like dishes, utensils, or towels, and wash your hands often."
                     ]
                 ]
 
@@ -536,7 +573,7 @@ viewEnResults answers =
                     , div [] [ strong [] [ text "As an additional precautionary measure," ] ]
                     , text "the Ministry of Health is asking those returning from travel outside Canada to "
                     , a [ target "__blank", href "https://www.publichealthontario.ca/-/media/documents/ncov/factsheet-covid-19-how-to-self-isolate.pdf?la=en" ] [ text "self-isolate" ]
-                    , text " or 14 days. That means not going to any public places, staying at home, and not having any visitors. Don’t share personal items like dishes, utensils, or towels, and wash your hands often."
+                    , text " for 14 days. That means not going to any public places, staying at home, and not having any visitors. Don’t share personal items like dishes, utensils, or towels, and wash your hands often."
                     ]
                 ]
 
@@ -992,23 +1029,23 @@ viewFrResults answers =
                 , div [ class "content" ]
                     [ text "Comme vous ne présentez aucun symptôme, vous n'avez pas besoin de tester le COVID-19 pour le moment. Cependant, il est possible que vous tombiez malade, car il y a moins de 14 jours depuis votre exposition. Vous devez surveiller vous-même les symptômes (fièvre, toux, éternuements, mal de gorge ou difficulté à respirer). Si vous commencez à les développer, vous devriez recommencer cette auto-évaluation."
                     , div [] [ strong [] [ text "Par mesure de précaution supplémentaire," ] ]
-                    , text "the Ministry of Health is asking those returning from travel outside Canada to "
-                    , a [ target "__blank", href "https://www.publichealthontario.ca/-/media/documents/ncov/factsheet-covid-19-how-to-self-isolate.pdf?la=fr" ] [ text "self-isolate" ]
-                    , text " or 14 days. That means not going to any public places, staying at home, and not having any visitors. Don’t share personal items like dishes, utensils, or towels, and wash your hands often."
+                    , text "le ministère de la Santé demande à ceux qui reviennent de voyager à l'extérieur du Canada de "
+                    , a [ target "__blank", href "https://www.publichealthontario.ca/-/media/documents/ncov/factsheet-covid-19-how-to-self-isolate.pdf?la=fr" ] [ text "s'isoler" ]
+                    , text " pendant 14 jours. Cela signifie ne pas aller dans les lieux publics, rester à la maison et ne pas avoir de visiteurs. Ne partagez pas d'objets personnels comme la vaisselle, les ustensiles ou les serviettes et lavez-vous les mains souvent."
                     ]
                 ]
 
         selfMonitor =
             div [ class "section" ]
                 [ h3 [ class "title" ]
-                    [ text "Since you don’t have any COVID-19 symptoms, you don’t need to be tested for COVID-19."
+                    [ text "Étant donné que vous ne présentez aucun symptôme de COVID-19, vous n'avez pas besoin de subir un test de dépistage de COVID-19."
                     ]
                 , div [ class "content" ]
-                    [ text "However, there’s a chance you could get sick since it’s less than 14 days since your exposure. You should self-monitor for any symptoms (fever, cough, sneezing, sore throat, or difficulty breathing)."
+                    [ text "Cependant, il est possible que vous tombiez malade, car il y a moins de 14 jours depuis votre exposition. Vous devez surveiller vous-même tout symptôme (fièvre, toux, éternuements, mal de gorge ou difficulté à respirer)."
                     , div []
-                        [ text "If you begin to develop symptoms (fever, cough, sneezing, sore throat, or difficulty breathing), you should "
-                        , a [ target "__blank", href "https://www.publichealthontario.ca/-/media/documents/ncov/factsheet-covid-19-how-to-self-isolate.pdf?la=en" ] [ text "self-isolate" ]
-                        , text " and take this self-assessment again. "
+                        [ text "Si vous commencez à développer des symptômes (fièvre, toux, éternuements, mal de gorge ou difficulté à respirer), vous devez vous "
+                        , a [ target "__blank", href "https://www.publichealthontario.ca/-/media/documents/ncov/factsheet-covid-19-how-to-self-isolate.pdf?la=fr" ] [ text "isoler" ]
+                        , text " et recommencer cette auto-évaluation."
                         ]
                     ]
                 ]
@@ -1016,15 +1053,15 @@ viewFrResults answers =
     case answers.q1 of
         NotAnswered ->
             div [ class "section" ]
-                [ text "Question 1 not answered. "
-                , a [ href "/en/1" ] [ text "Go answer it" ]
+                [ text "La question 1 n'a pas de réponse. "
+                , a [ href "/fr/1" ] [ text "Répondre" ]
                 ]
 
         Yes ->
             div [ class "section" ]
-                [ h3 [ class "title" ] [ text "Please call 911 or go directly to your nearest emergency department." ]
+                [ h3 [ class "title" ] [ text "Veuillez appeler le 911 ou vous rendre directement au service d'urgence le plus proche" ]
                 , div [ class "content" ]
-                    [ text "These symptoms require immediate attention. You should call 911 immediately, or go directly to your nearest emergency department."
+                    [ text "Ces symptômes nécessitent une attention immédiate. Vous devez appeler le 911 immédiatement ou vous rendre directement à l'urgence la plus proche."
                     ]
                 ]
 
@@ -1032,15 +1069,15 @@ viewFrResults answers =
             case answers.q2 of
                 NotAnswered ->
                     div [ class "section" ]
-                        [ text "Question 2 not answered. "
-                        , a [ href "/en/2" ] [ text "Go answer it" ]
+                        [ text "La question 2 n'a pas de réponse. "
+                        , a [ href "/fr/2" ] [ text "Répondre" ]
                         ]
 
                 Yes ->
                     div [ class "section" ]
-                        [ h3 [ class "title" ] [ text "Please call 811 to speak with Info-Santé" ]
+                        [ h3 [ class "title" ] [ text "Veuillez composer le 811 pour parler à Info-Santé" ]
                         , div [ class "content" ]
-                            [ text "A nurse at Info-Santé will need to speak to you about your symptoms in more detail. We are experiencing heavy call volumes and will get to your call as quickly as we can."
+                            [ text "Une infirmière d'Info-Santé devra vous parler plus en détail de vos symptômes. Nous connaissons de gros volumes d'appels et nous répondrons à votre appel le plus rapidement possible."
                             ]
                         ]
 
@@ -1048,16 +1085,16 @@ viewFrResults answers =
                     case answers.q3 of
                         NotAnswered ->
                             div [ class "section" ]
-                                [ text "Question 3 not answered. "
-                                , a [ href "/en/3" ] [ text "Go answer it" ]
+                                [ text "La question 3 n'a pas de réponse. "
+                                , a [ href "/fr/3" ] [ text "Répondre" ]
                                 ]
 
                         Yes ->
                             case answers.q4 of
                                 NotAnswered ->
                                     div [ class "section" ]
-                                        [ text "Question 4 not answered. "
-                                        , a [ href "/en/4" ] [ text "Go answer it" ]
+                                        [ text "La question 4 n'a pas de réponse. "
+                                        , a [ href "/fr/4" ] [ text "Répondre" ]
                                         ]
 
                                 Yes ->
@@ -1067,8 +1104,8 @@ viewFrResults answers =
                                     case answers.q5 of
                                         NotAnswered ->
                                             div [ class "section" ]
-                                                [ text "Question 5 not answered. "
-                                                , a [ href "/en/5" ] [ text "Go answer it" ]
+                                                [ text "La question 5 n'a pas de réponse. "
+                                                , a [ href "/fr/5" ] [ text "Répondre" ]
                                                 ]
 
                                         Yes ->
@@ -1078,8 +1115,8 @@ viewFrResults answers =
                                             case answers.q6 of
                                                 NotAnswered ->
                                                     div [ class "section" ]
-                                                        [ text "Question 6 not answered. "
-                                                        , a [ href "/en/6" ] [ text "Go answer it" ]
+                                                        [ text "La question 6 n'a pas de réponse. "
+                                                        , a [ href "/fr/6" ] [ text "Répondre" ]
                                                         ]
 
                                                 Yes ->
@@ -1092,8 +1129,8 @@ viewFrResults answers =
                             case answers.q4 of
                                 NotAnswered ->
                                     div [ class "section" ]
-                                        [ text "Question 4 not answered. "
-                                        , a [ href "/en/4" ] [ text "Go answer it" ]
+                                        [ text "La question 4 n'a pas de réponse. "
+                                        , a [ href "/fr/4" ] [ text "Répondre" ]
                                         ]
 
                                 Yes ->
@@ -1103,8 +1140,8 @@ viewFrResults answers =
                                     case answers.q5 of
                                         NotAnswered ->
                                             div [ class "section" ]
-                                                [ text "Question 5 not answered. "
-                                                , a [ href "/en/5" ] [ text "Go answer it" ]
+                                                [ text "La question 5 n'a pas de réponse. "
+                                                , a [ href "/fr/5" ] [ text "Répondre" ]
                                                 ]
 
                                         Yes ->
@@ -1114,8 +1151,8 @@ viewFrResults answers =
                                             case answers.q6 of
                                                 NotAnswered ->
                                                     div [ class "section" ]
-                                                        [ text "Question 6 not answered. "
-                                                        , a [ href "/en/6" ] [ text "Go answer it" ]
+                                                        [ text "La question 6 n'a pas de réponse. "
+                                                        , a [ href "/fr/6" ] [ text "Répondre" ]
                                                         ]
 
                                                 Yes ->
@@ -1132,8 +1169,11 @@ view model =
         [ viewNav model.page model.lang
         , main_ []
             [ case model.page of
-                Home ->
-                    viewHome
+                EnHome ->
+                    viewEnHome
+
+                FrHome ->
+                    viewFrHome
 
                 EnQuestion num ->
                     case num of
